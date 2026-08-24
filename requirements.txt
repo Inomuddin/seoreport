@@ -33,3 +33,9 @@ Flask-Mail==0.10.0
 
 # Utilities
 Pillow==10.4.0
+
+# Production server
+gunicorn==23.0.0
+
+# PostgreSQL
+psycopg[binary]==3.2.9
