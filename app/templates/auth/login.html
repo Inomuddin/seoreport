@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Log In · SEO Report{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+
+    <div class="auth-header">
+      <h1>📊 SEO Report</h1>
+      <p>Sign in to your agency account</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div class="form-group">
+        {{ form.email.label }}
+        {{ form.email(class="form-control", placeholder="you@agency.com", autofocus=true) }}
+        {% for error in form.email.errors %}
+          <span class="form-error">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        {{ form.password.label }}
+        {{ form.password(class="form-control", placeholder="••••••••") }}
+        {% for error in form.password.errors %}
+          <span class="form-error">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="form-row form-row-between">
+        <label class="checkbox-label">
+          {{ form.remember_me() }} Remember me
+        </label>
+        <a href="{{ url_for('auth.forgot_password') }}" class="link-muted">
+          Forgot password?
+        </a>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">
+        Log In
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      Don't have an account?
+      <a href="{{ url_for('auth.register') }}">Create one free</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

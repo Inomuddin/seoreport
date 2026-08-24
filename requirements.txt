@@ -1,0 +1,35 @@
+# Web framework
+Flask==3.0.3
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.7
+Flask-Login==0.6.3
+Flask-WTF==1.2.1
+WTForms==3.1.2
+email-validator==2.2.0
+
+# Database
+SQLAlchemy==2.0.31
+
+# Password hashing
+bcrypt==4.1.3
+Flask-Bcrypt==1.0.1
+
+# SEO analyzer
+requests==2.32.3
+beautifulsoup4==4.12.3
+lxml==5.2.2
+
+# PDF generation
+reportlab==4.2.2
+
+# Environment variables
+python-dotenv==1.0.1
+
+# Stripe payments
+stripe==10.5.0
+
+# Email
+Flask-Mail==0.10.0
+
+# Utilities
+Pillow==10.4.0

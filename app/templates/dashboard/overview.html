@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · SEO Report{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="page-subtitle">Welcome back, {{ current_user.full_name }}</p>
+  </div>
+  <a href="{{ url_for('dashboard.add_client') }}" class="btn btn-primary">
+    + Add Client
+  </a>
+</div>
+
+<!-- ── Stats ────────────────────────────────────────────────────────────── -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-value">{{ client_count }}</div>
+    <div class="stat-label">Clients</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ total_reports }}</div>
+    <div class="stat-label">Reports Generated</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">
+      {% if avg_score %}{{ avg_score }}<span class="stat-unit">/100</span>{% else %}—{% endif %}
+    </div>
+    <div class="stat-label">Avg. SEO Score</div>
+  </div>
+  <div class="stat-card stat-plan">
+    <div class="stat-value">{{ current_user.plan | capitalize }}</div>
+    <div class="stat-label">Current Plan</div>
+  </div>
+</div>
+
+<!-- ── Clients ───────────────────────────────────────────────────────────── -->
+<section class="section">
+  <div class="section-header">
+    <h2>Your Clients</h2>
+  </div>
+
+  {% if clients %}
+  <div class="clients-grid">
+    {% for client in clients %}
+    <div class="client-card">
+      <div class="client-card-header">
+        <h3>{{ client.name }}</h3>
+        <a href="{{ client.website_url }}" target="_blank" class="client-url">
+          {{ client.website_url | replace('https://', '') | replace('http://', '') | truncate(35) }}
+        </a>
+      </div>
+
+      <div class="client-card-body">
+        {% if client.latest_report %}
+          {% set r = client.latest_report %}
+          <div class="score-badge score-{{ r.score_color }}">
+            {{ r.overall_score }}/100
+          </div>
+          <span class="report-date">
+            Last report: {{ r.created_at.strftime('%b %d, %Y') }}
+          </span>
+        {% else %}
+          <span class="no-report">No reports yet</span>
+        {% endif %}
+      </div>
+
+      <div class="client-card-footer">
+        <a href="{{ url_for('dashboard.client_detail', client_id=client.id) }}"
+           class="btn btn-sm btn-outline">View</a>
+
+        <form method="POST"
+              action="{{ url_for('reports.generate', client_id=client.id) }}"
+              style="display:inline;">
+          {{ csrf_token_field() if csrf_token_field is defined else '' }}
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button type="submit" class="btn btn-sm btn-primary">
+            Generate Report
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🌐</div>
+    <h3>No clients yet</h3>
+    <p>Add your first client website to start generating SEO reports.</p>
+    <a href="{{ url_for('dashboard.add_client') }}" class="btn btn-primary">
+      + Add Your First Client
+    </a>
+  </div>
+  {% endif %}
+</section>
+
+<!-- ── Recent reports ────────────────────────────────────────────────────── -->
+{% if recent_reports %}
+<section class="section">
+  <div class="section-header">
+    <h2>Recent Reports</h2>
+  </div>
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Client</th>
+          <th>Score</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for report in recent_reports %}
+        <tr>
+          <td>{{ report.client.name }}</td>
+          <td>
+            {% if report.overall_score is not none %}
+              <span class="score-pill score-{{ report.score_color }}">
+                {{ report.overall_score }}/100
+              </span>
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td>
+            <span class="status-badge status-{{ report.status }}">
+              {{ report.status | capitalize }}
+            </span>
+          </td>
+          <td>{{ report.created_at.strftime('%b %d, %Y') }}</td>
+          <td>
+            {% if report.status == 'complete' %}
+              <a href="{{ url_for('reports.view', report_id=report.id) }}"
+                 class="btn btn-xs btn-outline">View</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}SEO Report · {{ client.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <a href="{{ url_for('dashboard.client_detail', client_id=client.id) }}" class="back-link">
+      ← {{ client.name }}
+    </a>
+    <h1>SEO Report</h1>
+    <p class="page-subtitle">{{ client.website_url }} · {{ report.created_at.strftime('%B %d, %Y') }}</p>
+  </div>
+  <div class="header-actions">
+    {% if report.pdf_filename %}
+      <a href="{{ url_for('reports.download', report_id=report.id) }}"
+         class="btn btn-primary">⬇ Download PDF</a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── Score summary ──────────────────────────────────────────────────────── -->
+<div class="score-summary">
+  <div class="main-score score-{{ report.score_color }}">
+    <div class="main-score-value">{{ report.overall_score }}</div>
+    <div class="main-score-label">Overall Score</div>
+    <div class="main-score-badge">{{ report.score_label }}</div>
+  </div>
+
+  <div class="sub-scores">
+    <div class="sub-score">
+      <div class="sub-score-value">{{ report.performance_score or '—' }}</div>
+      <div class="sub-score-label">Performance</div>
+    </div>
+    <div class="sub-score">
+      <div class="sub-score-value">{{ report.seo_score or '—' }}</div>
+      <div class="sub-score-label">SEO</div>
+    </div>
+    <div class="sub-score">
+      <div class="sub-score-value">{{ report.accessibility_score or '—' }}</div>
+      <div class="sub-score-label">Accessibility</div>
+    </div>
+    <div class="sub-score">
+      <div class="sub-score-value">{{ report.load_time_seconds }}s</div>
+      <div class="sub-score-label">Load Time</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Quick facts ────────────────────────────────────────────────────────── -->
+<div class="quick-facts">
+  {% macro fact(icon, label, value, ok) %}
+  <div class="fact-item fact-{{ 'ok' if ok else 'bad' }}">
+    <span class="fact-icon">{{ icon }}</span>
+    <span class="fact-label">{{ label }}</span>
+    <span class="fact-value">{{ value }}</span>
+  </div>
+  {% endmacro %}
+
+  {{ fact('🔒', 'HTTPS', 'Yes' if report.is_https else 'No', report.is_https) }}
+  {{ fact('📄', 'Meta Title', 'Present' if report.has_title else 'Missing', report.has_title) }}
+  {{ fact('📝', 'Meta Description', 'Present' if report.has_meta_description else 'Missing', report.has_meta_description) }}
+  {{ fact('🔤', 'H1 Heading', 'Present' if report.has_h1 else 'Missing', report.has_h1) }}
+  {{ fact('🤖', 'robots.txt', 'Found' if report.has_robots_txt else 'Missing', report.has_robots_txt) }}
+  {{ fact('🗺️', 'XML Sitemap', 'Found' if report.has_sitemap else 'Missing', report.has_sitemap) }}
+  {{ fact('📱', 'Mobile Friendly', 'Yes' if report.is_mobile_friendly else 'No', report.is_mobile_friendly) }}
+  {{ fact('🔗', 'Broken Links', report.broken_links_count ~ ' found', report.broken_links_count == 0) }}
+  {{ fact('🖼️', 'Images Without Alt', report.images_missing_alt ~ ' found', report.images_missing_alt == 0) }}
+</div>
+
+<!-- ── Checks by category ─────────────────────────────────────────────────── -->
+{% set categories = [
+  ('performance', '⚡', 'Performance'),
+  ('seo', '🔍', 'On-Page SEO'),
+  ('technical', '🔧', 'Technical'),
+  ('content', '📄', 'Content'),
+] %}
+
+{% for key, icon, label in categories %}
+  {% if checks_by_category[key] %}
+  <section class="checks-section">
+    <h2 class="checks-title">{{ icon }} {{ label }}</h2>
+    <div class="checks-list">
+      {% for item in checks_by_category[key] %}
+      <div class="check-item check-{{ item.status }}">
+        <div class="check-icon">
+          {% if item.status == 'pass' %}✅{% elif item.status == 'warning' %}⚠️{% else %}❌{% endif %}
+        </div>
+        <div class="check-content">
+          <div class="check-name">{{ item.check_name }}</div>
+          <div class="check-detail">{{ item.detail }}</div>
+          {% if item.recommendation %}
+            <div class="check-recommendation">💡 {{ item.recommendation }}</div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+{% endfor %}
+
+{% endblock %}

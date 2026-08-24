@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}{{ client.name }} · SEO Report{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <a href="{{ url_for('dashboard.overview') }}" class="back-link">← Dashboard</a>
+    <h1>{{ client.name }}</h1>
+    <a href="{{ client.website_url }}" target="_blank" class="client-url-large">
+      {{ client.website_url }}
+    </a>
+  </div>
+
+  <div class="header-actions">
+    <form method="POST" action="{{ url_for('reports.generate', client_id=client.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit" class="btn btn-primary">
+        ▶ Generate New Report
+      </button>
+    </form>
+    <a href="{{ url_for('dashboard.edit_client', client_id=client.id) }}"
+       class="btn btn-outline">Edit</a>
+  </div>
+</div>
+
+<!-- ── Client info ────────────────────────────────────────────────────────── -->
+<div class="info-grid">
+  {% if client.contact_email %}
+  <div class="info-item">
+    <span class="info-label">Contact</span>
+    <span class="info-value">{{ client.contact_email }}</span>
+  </div>
+  {% endif %}
+
+  <div class="info-item">
+    <span class="info-label">Reports Generated</span>
+    <span class="info-value">{{ client.report_count }}</span>
+  </div>
+
+  <div class="info-item">
+    <span class="info-label">Added</span>
+    <span class="info-value">{{ client.created_at.strftime('%B %d, %Y') }}</span>
+  </div>
+
+  {% if client.auto_report_enabled %}
+  <div class="info-item">
+    <span class="info-label">Auto Report</span>
+    <span class="info-value">Day {{ client.auto_report_day }} of each month</span>
+  </div>
+  {% endif %}
+</div>
+
+{% if client.notes %}
+<div class="notes-box">
+  <strong>Notes:</strong> {{ client.notes }}
+</div>
+{% endif %}
+
+<!-- ── Report history ─────────────────────────────────────────────────────── -->
+<section class="section">
+  <div class="section-header">
+    <h2>Report History</h2>
+  </div>
+
+  {% if reports %}
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Overall Score</th>
+          <th>Performance</th>
+          <th>SEO</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for report in reports %}
+        <tr>
+          <td>{{ report.created_at.strftime('%b %d, %Y %H:%M') }}</td>
+          <td>
+            {% if report.overall_score is not none %}
+              <span class="score-pill score-{{ report.score_color }}">
+                {{ report.overall_score }}/100
+              </span>
+            {% else %}—{% endif %}
+          </td>
+          <td>{{ report.performance_score or '—' }}</td>
+          <td>{{ report.seo_score or '—' }}</td>
+          <td>
+            <span class="status-badge status-{{ report.status }}">
+              {{ report.status | capitalize }}
+            </span>
+          </td>
+          <td class="table-actions">
+            {% if report.status == 'complete' %}
+              <a href="{{ url_for('reports.view', report_id=report.id) }}"
+                 class="btn btn-xs btn-outline">View</a>
+              <a href="{{ url_for('reports.download', report_id=report.id) }}"
+                 class="btn btn-xs btn-outline">PDF</a>
+            {% endif %}
+            <form method="POST"
+                  action="{{ url_for('reports.delete', report_id=report.id) }}"
+                  style="display:inline;"
+                  onsubmit="return confirm('Delete this report?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <button type="submit" class="btn btn-xs btn-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">📋</div>
+    <p>No reports yet. Click "Generate New Report" to run the first analysis.</p>
+  </div>
+  {% endif %}
+</section>
+
+<!-- ── Danger zone ────────────────────────────────────────────────────────── -->
+<section class="section danger-zone">
+  <h2>Danger Zone</h2>
+  <p>Deleting this client will permanently remove all their reports.</p>
+  <form method="POST"
+        action="{{ url_for('dashboard.delete_client', client_id=client.id) }}"
+        onsubmit="return confirm('Delete {{ client.name }} and all their reports? This cannot be undone.')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <button type="submit" class="btn btn-danger">Delete Client</button>
+  </form>
+</section>
+
+{% endblock %}

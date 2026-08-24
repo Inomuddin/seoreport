@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Profile · SEO Report{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <a href="{{ url_for('dashboard.overview') }}" class="back-link">← Dashboard</a>
+    <h1>Agency Profile</h1>
+    <p class="page-subtitle">Manage your branding and account settings</p>
+  </div>
+</div>
+
+<div class="form-card">
+  <form method="POST" enctype="multipart/form-data" novalidate>
+    {{ form.hidden_tag() }}
+
+    <h2 class="form-section-title">Account</h2>
+
+    <div class="form-group">
+      {{ form.full_name.label }}
+      {{ form.full_name(class="form-control") }}
+      {% for error in form.full_name.errors %}
+        <span class="form-error">{{ error }}</span>
+      {% endfor %}
+    </div>
+
+    <div class="form-group">
+      {{ form.agency_name.label }}
+      {{ form.agency_name(class="form-control", placeholder="Your Agency Name") }}
+      {% for error in form.agency_name.errors %}
+        <span class="form-error">{{ error }}</span>
+      {% endfor %}
+    </div>
+
+    <h2 class="form-section-title">Branding (White-Label Reports)</h2>
+    <p class="form-hint">Your logo and brand colour will appear on every PDF report you send to clients.</p>
+
+    <div class="form-group">
+      {{ form.logo.label }}
+      {% if current_user.logo_filename %}
+        <div class="current-logo">
+          <img src="{{ url_for('static', filename='uploads/' ~ current_user.logo_filename) }}"
+               alt="Current logo" class="logo-preview" />
+          <span class="logo-hint">Upload a new file to replace</span>
+        </div>
+      {% endif %}
+      {{ form.logo(class="form-control") }}
+      {% for error in form.logo.errors %}
+        <span class="form-error">{{ error }}</span>
+      {% endfor %}
+    </div>
+
+    <div class="form-group">
+      {{ form.brand_color.label }}
+      <div class="color-input-row">
+        <input type="color" id="color-picker"
+               value="{{ current_user.brand_color or '#4F46E5' }}"
+               oninput="document.getElementById('brand_color').value = this.value" />
+        {{ form.brand_color(class="form-control form-control-sm", id="brand_color") }}
+      </div>
+      {% for error in form.brand_color.errors %}
+        <span class="form-error">{{ error }}</span>
+      {% endfor %}
+    </div>
+
+    <div class="form-actions">
+      <a href="{{ url_for('dashboard.overview') }}" class="btn btn-outline">Cancel</a>
+      {{ form.submit(class="btn btn-primary") }}
+    </div>
+  </form>
+</div>
+
+<!-- ── Plan info ──────────────────────────────────────────────────────────── -->
+<div class="form-card" style="margin-top: 24px;">
+  <h2 class="form-section-title">Subscription</h2>
+  <div class="plan-info">
+    <div>
+      <strong>Current plan:</strong>
+      {{ current_user.plan | capitalize }}
+      {% if current_user.client_limit %}
+        · Up to {{ current_user.client_limit }} clients
+      {% else %}
+        · Unlimited clients
+      {% endif %}
+    </div>
+    <div>
+      <strong>Status:</strong>
+      <span class="status-badge status-{{ 'complete' if current_user.is_subscription_active else 'failed' }}">
+        {{ 'Active' if current_user.is_subscription_active else 'Inactive' }}
+      </span>
+    </div>
+  </div>
+  <p class="form-hint" style="margin-top: 12px;">
+    Stripe billing will be integrated in the next version.
+  </p>
+</div>
+
+{% endblock %}
