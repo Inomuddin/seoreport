@@ -38,4 +38,4 @@ Pillow==10.4.0
 gunicorn==23.0.0
 
 # PostgreSQL
-psycopg[binary]==3.2.9
+psycopg[binary]==3.2.13
