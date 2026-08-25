@@ -1,18 +1,21 @@
 """
-run.py — Application entry point.
+run.py — Local development entry point.
 
 Usage:
     python run.py
 
-What this does on first run:
+What this does:
   1. Installs Python dependencies from requirements.txt
-  2. Creates the SQLite database and all tables
+  2. Applies database migrations with Flask-Migrate
   3. Starts the Flask development server on http://localhost:5001
+
+Production deployment should use Gunicorn directly:
+    gunicorn "app:create_app()"
 """
 
+import os
 import subprocess
 import sys
-import os
 
 
 def run_command(cmd: str, **kwargs) -> None:
@@ -26,7 +29,7 @@ def run_command(cmd: str, **kwargs) -> None:
 
 
 def main() -> None:
-    # Always work relative to this file's directory
+    # Always work relative to this file's directory.
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     print("\n" + "=" * 52)
@@ -35,33 +38,25 @@ def main() -> None:
 
     # ── Step 1: Install dependencies ──────────────────────────────────────
     print("▸ Installing dependencies...")
-
     run_command(
         f'"{sys.executable}" -m pip install -r requirements.txt -q'
     )
-
     print("  ✓ Dependencies ready\n")
 
-    # ── Step 2: Create database ────────────────────────────────────────────
-    print("▸ Setting up database...")
+    # ── Step 2: Apply database migrations ──────────────────────────────────
+    print("▸ Applying database migrations...")
 
-    try:
-        from app import create_app, db
+    os.environ.setdefault("FLASK_APP", "app:create_app()")
 
-        app = create_app()
+    run_command(
+        f'"{sys.executable}" -m flask db upgrade'
+    )
 
-        with app.app_context():
-            db.create_all()
+    print("  ✓ Database migrations applied\n")
 
-        print("  ✓ Database tables created\n")
-
-    except Exception as e:
-        print(f"\n✗ Database setup failed: {e}")
-        sys.exit(1)
-
-    # ── Step 3: Start the server ───────────────────────────────────────────
+    # ── Step 3: Start the development server ───────────────────────────────
     print("▸ Starting server...\n")
-    print("  🚀  http://localhost:5001\n")
+    print("  🚀 http://localhost:5001")
     print("  Press Ctrl+C to stop\n")
     print("=" * 52 + "\n")
 
